@@ -7,16 +7,20 @@ shiro 知识整理：
 	Subject currentUser = SecurityUtils.getSubject();
 
 ## 构建 UsernamePasswordToken 对象
+
 	UsernamePasswordToken token = new UsernamePasswordToken("username", "password");
 	可自定义实现，自定义实现时，需要将token实体传入realm中
 	
 ## 调用login方法，开始认证
+
+```
 	currentUser.login(token);
+```
 	
-	该方法会抛出异常：
-		UnknownAccountException	表示 username 不存在
-		IncorrectCredentialsException	表示 password 有误
-		LockedAccountException	表示 username 被锁定
+该方法会抛出异常：
+	UnknownAccountException	表示 username 不存在
+	IncorrectCredentialsException	表示 password 有误
+	LockedAccountException	表示 username 被锁定
 	
 	重点是 DelegatingSubject 类，该类默认实现了 Subject 接口，作为 shiro 默认的认证类，自定义时，继承该类，重写认证方法。
 	
@@ -74,7 +78,7 @@ shiro的ini.ini 文件为shiro 的一种配置方式
 	当login函数没有返回信息时表明验证通过了。程序可以继续运行，此时执行 SecurityUtils.getSubject() 将返回验证后的 Subject 实例，subject.isAuthenticated()) 将返回true。
 
 	可以将 login 放入到 try/catch 块中并捕获所有你想捕获的异常并对它们做出处理。例如：
-···	
+```
 		try {
 			currentUser.login(token);
 		} catch ( UnknownAccountException uae ) { ...
@@ -87,7 +91,7 @@ shiro的ini.ini 文件为shiro 的一种配置方式
 		}
 
 		//没问题，继续
-···	
+```
 	但是如果 login 失败了呢？例如，用户提供了一个错误的密码或者因访问系统次数过多而被锁定将会怎样呢？
 	
 			UnknownAccountException	表示 username 不存在
