@@ -5,7 +5,7 @@
 	        <Console name="Console" target="SYSTEM_OUT">
 	        	<PatternLayout pattern="[%-d{yyyy-MM-dd HH:mm:ss,SSS}] [%p] [%F:%L] [%c.%M] [%t]: %m%n" />
 	        </Console>
-	        <RollingFile name="SysRollingFile"
+	       <!--  <RollingFile name="SysRollingFile"
 	                fileName="${sys:log.path.prefix}/log.log"
 	                filePattern="${sys:log.path.prefix}/$${date:yyyy-MM}/log-%d{yyyy-MM-dd_HH}-%i.log">
 	                <PatternLayout charset="UTF-8"
@@ -14,8 +14,8 @@
 	                        <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
 	                        <SizeBasedTriggeringPolicy size="250 MB" />
 	                </Policies>
-	        </RollingFile>
-	        <Syslog charset="UTF-8" name="RFC5424" format="RFC5424" host="10.17.4.20"
+	        </RollingFile> -->
+	        <!-- <Syslog charset="UTF-8" name="RFC5424" format="RFC5424" host="10.17.4.20"
 	                port="9999" protocol="UDP" facility="LOCAL0" newLine="true"
 	                messageId="wallet-msg" appName="wallet-app" mdcId="wallet-mdc">
 	                <LoggerFields>
@@ -26,15 +26,15 @@
 	                        <KeyValuePair key="file" value="%F:%L" />
 	                        <KeyValuePair key="exception" value="%ex" />
 	                </LoggerFields>
-	        </Syslog>
+	        </Syslog> -->
         </Appenders>
         <Loggers>
-	        <logger name="SETTLE" level="info" additivity="true">
+	        <!-- <logger name="SETTLE" level="info" additivity="true">
                 <AppenderRef ref="SettleRollingFile" />
-	        </logger>
+	        </logger> -->
 	        <Root level="info">
                 <AppenderRef ref="Console" />
-                <AppenderRef ref="SysRollingFile" />
+                <!-- <AppenderRef ref="SysRollingFile" /> -->
              <!-- <AppenderRef ref="RFC5424" /> -->
 	        </Root>
         </Loggers>

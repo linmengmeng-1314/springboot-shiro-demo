@@ -43,11 +43,13 @@ public class Tutorial {
         // 检验当前登录用户角色和权限
         System.out.println("isAuthenticated:" + currentUser.isAuthenticated());
         if (!currentUser.isAuthenticated()) {
-			UsernamePasswordToken token = new UsernamePasswordToken("lonestarr", "vespa");
+			UsernamePasswordToken token = new UsernamePasswordToken("lonestarr1", "vespa");
 			token.setRememberMe(true);
 			try {
 				currentUser.login(token);
 			} catch (UnknownAccountException uae) {//当前用户lonestarr1不存在
+				//实质是判断token.getPrincipal()方法返回值是否为空，其返回值应该是唯一的，可以是用户名或者账号
+				System.out.println("msg:" + uae.getMessage());
                 log.info("There is no user with username of " + token.getPrincipal());
             } catch (IncorrectCredentialsException ice) {//用户lonestarr密码错误
                 log.info("Password for account " + token.getPrincipal() + " was incorrect!");
@@ -70,6 +72,8 @@ public class Tutorial {
 	        } else {
 	            log.info("Hello, mere mortal.");
 	        }
+	        
+	        currentUser.checkRole("schwartz1");//没有该角色会抛出UnauthenticatedException
 	        
 	        //测试一个权限 (非（instance-level）实例级别)
 	        if (currentUser.isPermitted("lightsaber:weild")) {
