@@ -3,51 +3,51 @@ shiro 知识整理：
 
 # 认证流程：
 
-	## 获取主体对象
-		Subject currentUser = SecurityUtils.getSubject();
+## 获取主体对象
+	Subject currentUser = SecurityUtils.getSubject();
+
+## 构建 UsernamePasswordToken 对象
+	UsernamePasswordToken token = new UsernamePasswordToken("username", "password");
+	可自定义实现，自定义实现时，需要将token实体传入realm中
 	
-	## 构建 UsernamePasswordToken 对象
-		UsernamePasswordToken token = new UsernamePasswordToken("username", "password");
-		可自定义实现，自定义实现时，需要将token实体传入realm中
-		
-	## 调用login方法，开始认证
-		currentUser.login(token);
-		
-		该方法会抛出异常：
-			UnknownAccountException	表示 username 不存在
-			IncorrectCredentialsException	表示 password 有误
-			LockedAccountException	表示 username 被锁定
-		
-		重点是 DelegatingSubject 类，该类默认实现了 Subject 接口，作为 shiro 默认的认证类，自定义时，继承该类，重写认证方法。
-		
-	Realm 本质上是一个特定的安全 DAO：它封装与数据源连接的细节，得到Shiro 所需的相关的数据。在配置 Shiro 的时候，你必须指定至少一个Realm 来实现认证（authentication）和/或授权（authorization）。SecurityManager 可以配置多个复杂的 Realm，但是至少有一个是需要的。
+## 调用login方法，开始认证
+	currentUser.login(token);
 	
-	自定义 Realm 一般继承 AuthorizingRealm 就可以了，其继承了AuthenticatingRealm（即身份验证），而且也间接继承了CachingRealm（带有缓存实现），最顶端的父类还是Realm。  需传入SecurityManager中才会生效。
+	该方法会抛出异常：
+		UnknownAccountException	表示 username 不存在
+		IncorrectCredentialsException	表示 password 有误
+		LockedAccountException	表示 username 被锁定
 	
-	  如果定义了多个 realm 则 shiro 会根据 securityManager 中设置的顺序 来以此进行 realm 的验证。  每个realm验证成功后返回一个 SimpleAuthenticationInfo(username, password, getName()) 对象，getName方法可在realm中自定义实现，如返回realm的名称，验证失败则抛出对应的异常。
-	这时可以使用subject.getPrincipals(); 得到一个身份集合，其包含了Realm验证成功的身份信息。可以对返回的身份集合进行判断，全部满足，部分满足，至少一个满足等(源码：org.apache.shiro.authc.pam.ModularRealmAuthenticator.doMultiRealmAuthentication(Collection<Realm>, AuthenticationToken))。principalCollection.asList().size()返回身份集合的大小。
+	重点是 DelegatingSubject 类，该类默认实现了 Subject 接口，作为 shiro 默认的认证类，自定义时，继承该类，重写认证方法。
 	
-	当需要自定义实现多个realm场景的机制时，可以自定义 AuthenticationStrategy 实现。其api包含：//在所有Realm验证之前调用，在每个Realm之前调用，在每个Realm之后调用 ，在所有Realm之后调用 
+Realm 本质上是一个特定的安全 DAO：它封装与数据源连接的细节，得到Shiro 所需的相关的数据。在配置 Shiro 的时候，你必须指定至少一个Realm 来实现认证（authentication）和/或授权（authorization）。SecurityManager 可以配置多个复杂的 Realm，但是至少有一个是需要的。
+
+自定义 Realm 一般继承 AuthorizingRealm 就可以了，其继承了AuthenticatingRealm（即身份验证），而且也间接继承了CachingRealm（带有缓存实现），最顶端的父类还是Realm。  需传入SecurityManager中才会生效。
+
+  如果定义了多个 realm 则 shiro 会根据 securityManager 中设置的顺序 来以此进行 realm 的验证。  每个realm验证成功后返回一个 SimpleAuthenticationInfo(username, password, getName()) 对象，getName方法可在realm中自定义实现，如返回realm的名称，验证失败则抛出对应的异常。
+这时可以使用subject.getPrincipals(); 得到一个身份集合，其包含了Realm验证成功的身份信息。可以对返回的身份集合进行判断，全部满足，部分满足，至少一个满足等(源码：org.apache.shiro.authc.pam.ModularRealmAuthenticator.doMultiRealmAuthentication(Collection<Realm>, AuthenticationToken))。principalCollection.asList().size()返回身份集合的大小。
+
+当需要自定义实现多个realm场景的机制时，可以自定义 AuthenticationStrategy 实现。其api包含：//在所有Realm验证之前调用，在每个Realm之前调用，在每个Realm之后调用 ，在所有Realm之后调用 
+
+可以看到源码doMultiRealmAuthentication方法中AuthenticationInfo 只有一个实例。因为每个AuthenticationStrategy实例都是无状态的，所以每次都通过接口将相应的认证信息传入下一次流程；通过如上接口可以进行如合并/返回第一个验证成功的认证信息。
+
+自定义 AuthenticationStrategy 实现时一般继承org.apache.shiro.authc.pam.AbstractAuthenticationStrategy 即可，shiro提供了三种实现：AllSuccessfulStrategy，AtLeastOneSuccessfulStrategy，FirstSuccessfulStrategy
+
+shiro的ini.ini 文件为shiro 的一种配置方式
+
+如果实现自定义的密码加密方式，可以在 realm 中告诉默认的iniRealm
+
+在 ini文件中使用：
+	[main]
+	sha256Matcher = org.apache.shiro.authc.credential.Sha256CredentialsMatcher
 	
-	可以看到源码doMultiRealmAuthentication方法中AuthenticationInfo 只有一个实例。因为每个AuthenticationStrategy实例都是无状态的，所以每次都通过接口将相应的认证信息传入下一次流程；通过如上接口可以进行如合并/返回第一个验证成功的认证信息。
+	iniRealm.credentialsMatcher = $sha256Matcher
 	
-	自定义 AuthenticationStrategy 实现时一般继承org.apache.shiro.authc.pam.AbstractAuthenticationStrategy 即可，shiro提供了三种实现：AllSuccessfulStrategy，AtLeastOneSuccessfulStrategy，FirstSuccessfulStrategy
+	[users]
+	# user1 = sha256-hashed-hex-encoded password, role1, role2, ...
+	user1 = 2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b, role1, role2, ...
 	
-	shiro的ini.ini 文件为shiro 的一种配置方式
-	
-	如果实现自定义的密码加密方式，可以在 realm 中告诉默认的iniRealm
-	
-	在 ini文件中使用：
-		[main]
-		sha256Matcher = org.apache.shiro.authc.credential.Sha256CredentialsMatcher
-		
-		iniRealm.credentialsMatcher = $sha256Matcher
-		
-		[users]
-		# user1 = sha256-hashed-hex-encoded password, role1, role2, ...
-		user1 = 2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b, role1, role2, ...
-		
-	使用javaBean时，类似实例化自定义的realm后，使用set属性，给realm的credentialsMatcher 赋值
+使用javaBean时，类似实例化自定义的realm后，使用set属性，给realm的credentialsMatcher 赋值
 	
 # 登录验证过程
 
